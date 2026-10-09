@@ -36,16 +36,20 @@ function render(rows) {
 async function refresh() {
   if (busy || !token) return;
   busy = true;
+  const activeToken = token;
   document.querySelector('#refresh').disabled = true;
   document.querySelector('#print').disabled = true;
   status.textContent = 'Loading volunteer report…';
   try {
     const response = await fetch(URL + '/functions/v1/chanukah-organizer-report', { headers: { apikey: KEY, Authorization: 'Bearer ' + token }, cache: 'no-store' });
+    if (token !== activeToken) return;
     if (!response.ok) {
       if (response.status === 401 || response.status === 403) { token = null; clearReport(); login.hidden = false; throw new Error('Please sign in with the organizer account to view this report.'); }
       throw new Error('Unable to load the report. Please try again.');
     }
-    render((await response.json()).rows);
+    const body = await response.json();
+    if (token !== activeToken) return;
+    render(body.rows);
     status.textContent = '';
   } catch (error) { status.textContent = report.hidden ? error.message : error.message + ' The displayed report is from the previous refresh.'; }
   finally { busy = false; document.querySelector('#refresh').disabled = false; document.querySelector('#print').disabled = false; }

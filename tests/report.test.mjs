@@ -5,7 +5,7 @@ import { buildReport, sections } from '../report.mjs';
 import { handle } from '../supabase/functions/chanukah-organizer-report/index.ts';
 const env = key => ({ SUPABASE_URL: 'https://database.example', SUPABASE_SERVICE_ROLE_KEY: 'secret' })[key];
 const request = token => new Request('https://example.com', { headers: token ? { Authorization: 'Bearer ' + token } : {} });
-test('report slot mappings match all current signup headings and local positions', () => {
+test('report slot mappings match all current signup headings and local positions', { skip: !fs.existsSync('../chanukahvolunteers/index.html') }, () => {
   const html = fs.readFileSync('../chanukahvolunteers/index.html', 'utf8');
   const fields = [...html.matchAll(/<fieldset><legend>(.*?)<\/legend>([\s\S]*?)<\/fieldset>/g)];
   assert.equal(fields.length, sections.length);
@@ -15,6 +15,7 @@ test('report slot mappings match all current signup headings and local positions
   });
 });
 test('empty and full reports account for every position', () => {
+  assert.deepEqual(sections.flatMap(([, , slots]) => slots).sort((a, b) => a - b), Array.from({ length: 45 }, (_, index) => index + 1));
   const empty = buildReport([]);
   assert.equal(empty.total, 45); assert.equal(empty.filled, 0); assert.equal(empty.items.length, 12);
   const rows = sections.flatMap(([, , slots]) => slots.map(slot => ({ slot, full_name: 'A', email: 'a@example.com', phone: '5551234567' })));
