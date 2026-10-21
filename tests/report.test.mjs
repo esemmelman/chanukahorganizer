@@ -49,7 +49,8 @@ test('correct passcode receives only requested report columns', async () => {
     assert.equal(options.headers.Authorization, 'Bearer secret');
     return Response.json(rows);
   });
-  assert.deepEqual(await response.json(), { rows }); assert.equal(calls, 1);
+  const body = await response.json();
+  assert.deepEqual(body.rows, rows); assert.ok(body.session.token); assert.equal(calls, 1);
   assert.equal(response.headers.get('cache-control'), 'no-store');
 });
 test('unconfigured passcode fails closed and GET cannot return contacts', async () => {
@@ -86,4 +87,25 @@ test('same name and email merge across phone differences without losing contacts
   assert.equal(report.volunteers[0].cell, '(555) 123-4567 / 555-987-6543');
   assert.deepEqual(report.volunteers[0].assignments.map(a => a.position), [1,2,3]);
   assert.equal(report.filled, 4);
+});
+
+test('remembered sessions last 30 days and reject tampering, expiration, and passcode changes', async () => {
+  const fetcher = async () => Response.json([]);
+  const started = Date.now();
+  const first = await handle(request('test-passcode'), env, fetcher);
+  const { session } = await first.json();
+  assert.ok(session.expiresAt >= started + 30 * 86400000);
+  assert.ok(session.expiresAt <= Date.now() + 30 * 86400000);
+  const sessionRequest = token => new Request('https://example.com', { method: 'POST', body: JSON.stringify({ session: token }) });
+  const second = await handle(sessionRequest(session.token), env, fetcher);
+  assert.equal(second.status, 200);
+  assert.deepEqual((await second.json()).session, session);
+  const noFetch = () => { throw new Error('must not read contacts'); };
+  assert.equal((await handle(sessionRequest('x' + session.token), env, noFetch)).status, 401);
+  assert.equal((await handle(sessionRequest(session.token), key => key === 'CHANUKAH_ORGANIZER_PASSCODE' ? 'changed' : env(key), noFetch)).status, 401);
+  const realNow = Date.now;
+  try {
+    Date.now = () => session.expiresAt;
+    assert.equal((await handle(sessionRequest(session.token), env, noFetch)).status, 401);
+  } finally { Date.now = realNow; }
 });

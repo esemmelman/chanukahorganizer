@@ -8,7 +8,7 @@ Serve this directory with a static web server or GitHub Pages. There are no fron
 
 ## Privacy and backend
 
-Contact data is fetched through `chanukah-organizer-report` in Supabase project `fgomaujsdblpzxhnnqrg`. The function checks the server-only `CHANUKAH_ORGANIZER_PASSCODE` secret before using its server-only service role to read contacts. Public signup table permissions stay unchanged. Contact data and credentials are never committed to GitHub. The browser keeps the passcode in memory only; reloading requires entering it again.
+Contact data is fetched through `chanukah-organizer-report` in Supabase project `fgomaujsdblpzxhnnqrg`. The function checks the server-only `CHANUKAH_ORGANIZER_PASSCODE` secret before using its server-only service role to read contacts. Public signup table permissions stay unchanged. Contact data and credentials are never committed to GitHub. After validating the passcode, the server issues a signed session valid for 30 days. The browser stores only that session, never the passcode, and automatically restores access on return. Lock report clears the saved session on this browser. Expired sessions or a changed passcode require entering the passcode again.
 
 Deploy the function with JWT verification disabled using the included config; the function performs its own passcode authentication. Set `CHANUKAH_ORGANIZER_PASSCODE` using Supabase secrets; never commit its value. No schema changes are required. Tests: `node --test tests/*.test.mjs`.
 
