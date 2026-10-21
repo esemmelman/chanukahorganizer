@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { buildReport, sections, boothNames, positionLabel } from '../report.mjs';
 import { handle } from '../supabase/functions/chanukah-organizer-report/index.ts';
-const env = key => ({ SUPABASE_URL: 'https://database.example', SUPABASE_SERVICE_ROLE_KEY: 'secret' })[key];
-const request = token => new Request('https://example.com', { headers: token ? { Authorization: 'Bearer ' + token } : {} });
+const env = key => ({ CHANUKAH_ORGANIZER_PASSCODE: 'test-passcode', SUPABASE_URL: 'https://database.example', SUPABASE_SERVICE_ROLE_KEY: 'secret' })[key];
+const request = passcode => new Request('https://example.com', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ passcode }) });
 test('report slot mappings match all current signup headings and local positions', { skip: !fs.existsSync('../chanukahvolunteers/index.html') }, () => {
   const html = fs.readFileSync('../chanukahvolunteers/index.html', 'utf8');
   const fields = [...html.matchAll(/<fieldset><legend>(.*?)<\/legend>([\s\S]*?)<\/fieldset>/g)];
@@ -34,33 +34,33 @@ test('multiple submissions group by contact identity and use local row numbers',
   const distinct = buildReport([{ slot: 1, full_name: 'A', email: 'a@example.com', phone: '5551234567' }, { slot: 2, full_name: 'A', email: 'b@example.com', phone: '5551234567' }]);
   assert.equal(distinct.volunteers.length, 2);
 });
-test('missing and invalid tokens cannot read contacts', async () => {
-  const missing = await handle(request(), env, () => { throw new Error('must not fetch'); });
-  assert.equal(missing.status, 401);
-  let calls = 0;
-  const invalid = await handle(request('invalid'), env, async () => { calls++; return new Response(null, { status: 401 }); });
-  assert.equal(invalid.status, 401); assert.equal(calls, 1);
+test('missing and incorrect passcodes cannot read contacts', async () => {
+  for (const code of [undefined, '', 'invalid']) {
+    const response = await handle(request(code), env, () => { throw new Error('must not fetch'); });
+    assert.equal(response.status, 401);
+  }
 });
-test('another authenticated user cannot read contacts', async () => {
-  let calls = 0;
-  const response = await handle(request('other-user'), env, async () => { calls++; return Response.json({ id: 'other-id', user_metadata: { organizer: true } }); });
-  assert.equal(response.status, 403); assert.equal(calls, 1);
-});
-test('organizer receives only requested report columns after authorization', async () => {
+test('correct passcode receives only requested report columns', async () => {
   let calls = 0;
   const rows = [{ slot: 1, full_name: 'A', email: 'a@example.com', phone: '5551234567' }];
-  const response = await handle(request('organizer'), env, async (url, options) => {
+  const response = await handle(request('test-passcode'), env, async (url, options) => {
     calls++;
-    if (calls === 1) { assert.equal(options.headers.Authorization, 'Bearer organizer'); return Response.json({ id: 'bdfe3c81-3e96-4928-aa91-dc4ebabb7e87' }); }
     assert.match(url, /select=slot,full_name,email,phone&order=slot$/);
     assert.equal(options.headers.Authorization, 'Bearer secret');
     return Response.json(rows);
   });
-  assert.deepEqual(await response.json(), { rows }); assert.equal(calls, 2);
+  assert.deepEqual(await response.json(), { rows }); assert.equal(calls, 1);
   assert.equal(response.headers.get('cache-control'), 'no-store');
 });
+test('unconfigured passcode fails closed and GET cannot return contacts', async () => {
+  assert.equal((await handle(request('test-passcode'), () => undefined)).status, 503);
+  assert.equal((await handle(new Request('https://example.com'), env)).status, 405);
+  const preflight = await handle(new Request('https://example.com', { method: 'OPTIONS' }), env);
+  assert.equal(preflight.status, 204);
+  assert.equal(preflight.headers.get('Access-Control-Allow-Methods'), 'POST, OPTIONS');
+});
 test('backend failures return no data', async () => {
-  const response = await handle(request('organizer'), env, async () => { throw new Error('private details'); });
+  const response = await handle(request('test-passcode'), env, async () => { throw new Error('private details'); });
   assert.equal(response.status, 502); assert.deepEqual(await response.json(), { error: 'Report unavailable' });
 });
 

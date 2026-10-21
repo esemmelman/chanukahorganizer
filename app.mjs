@@ -4,7 +4,7 @@ const KEY = 'sb_publishable_JOUqLZDnfGu_yCa6k6FVDQ_AYwpr72i';
 const login = document.querySelector('#login');
 const report = document.querySelector('#report');
 const status = document.querySelector('#status');
-let token = null;
+let passcode = null;
 let busy = false;
 function clearReport() {
   report.hidden = true;
@@ -34,43 +34,37 @@ function render(rows) {
   report.hidden = false;
 }
 async function refresh() {
-  if (busy || !token) return;
+  if (busy || !passcode) return;
   busy = true;
-  const activeToken = token;
+  const activePasscode = passcode;
   document.querySelector('#refresh').disabled = true;
   document.querySelector('#print').disabled = true;
   status.textContent = 'Loading volunteer report…';
   try {
-    const response = await fetch(URL + '/functions/v1/chanukah-organizer-report', { headers: { apikey: KEY, Authorization: 'Bearer ' + token }, cache: 'no-store' });
-    if (token !== activeToken) return;
+    const response = await fetch(URL + '/functions/v1/chanukah-organizer-report', { method: 'POST', headers: { apikey: KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ passcode }), cache: 'no-store' });
+    if (passcode !== activePasscode) return;
     if (!response.ok) {
-      if (response.status === 401 || response.status === 403) { token = null; clearReport(); login.hidden = false; throw new Error('Please sign in with the organizer account to view this report.'); }
+      if (response.status === 401 || response.status === 403) { passcode = null; clearReport(); login.hidden = false; throw new Error('Incorrect passcode. Please try again.'); }
       throw new Error('Unable to load the report. Please try again.');
     }
     const body = await response.json();
-    if (token !== activeToken) return;
+    if (passcode !== activePasscode) return;
     render(body.rows);
     status.textContent = '';
-  } catch (error) { status.textContent = report.hidden ? error.message : error.message + ' The displayed report is from the previous refresh.'; }
+  } catch (error) { if (report.hidden) login.hidden = false; status.textContent = report.hidden ? error.message : error.message + ' The displayed report is from the previous refresh.'; }
   finally { busy = false; document.querySelector('#refresh').disabled = false; document.querySelector('#print').disabled = false; }
 }
 login.addEventListener('submit', async event => {
   event.preventDefault();
   const button = login.querySelector('button'); button.disabled = true;
-  status.textContent = 'Signing in…';
-  const data = new FormData(login);
-  try {
-    const response = await fetch(URL + '/auth/v1/token?grant_type=password', { method: 'POST', headers: { apikey: KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ email: data.get('email'), password: data.get('password') }) });
-    if (!response.ok) throw new Error('Sign in failed. Check your email and password.');
-    token = (await response.json()).access_token;
-    login.reset(); login.hidden = true;
-    await refresh();
-  } catch (error) { status.textContent = error.message; }
+  passcode = new FormData(login).get('passcode');
+  login.reset(); login.hidden = true;
+  try { await refresh(); }
   finally { button.disabled = false; }
+
 });
 document.querySelector('#refresh').addEventListener('click', refresh);
 document.querySelector('#print').addEventListener('click', () => window.print());
-document.querySelector('#logout').addEventListener('click', async () => {
-  const previous = token; token = null; clearReport(); login.hidden = false; status.textContent = 'Signed out.';
-  if (previous) await fetch(URL + '/auth/v1/logout', { method: 'POST', headers: { apikey: KEY, Authorization: 'Bearer ' + previous } }).catch(() => {});
+document.querySelector('#logout').addEventListener('click', () => {
+  passcode = null; clearReport(); login.hidden = false; status.textContent = 'Report locked.';
 });

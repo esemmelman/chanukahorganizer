@@ -3,10 +3,10 @@
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Chanukah Volunteer Report</title><link rel="stylesheet" href="styles.css"><script type="module" src="app.mjs"></script></head>
 <body><main>
 <header><p class="eyebrow">CHANUKAH CARNIVAL · NOVEMBER 8TH</p><h1>Volunteer report</h1><p>Contact details, volunteer assignments, and positions still to fill.</p></header>
-<form id="login"><h2>Organizer sign in</h2><label>Email<input name="email" type="email" autocomplete="username" value="esemmoc@gmail.com" required></label><label>Password<input name="password" type="password" autocomplete="current-password" required></label><button>Sign in</button></form>
+<form id="login"><h2>Organizer access</h2><label>Passcode<input name="passcode" type="password" autocomplete="current-password" required></label><button>View report</button></form>
 <p id="status" role="status" aria-live="polite"></p>
 <section id="report" hidden>
-<div class="toolbar"><button id="refresh">Refresh report</button><button id="print">Print / Save PDF</button><button id="logout" class="secondary">Sign out</button></div>
+<div class="toolbar"><button id="refresh">Refresh report</button><button id="print">Print / Save PDF</button><button id="logout" class="secondary">Lock report</button></div>
 <p id="updated"></p><div id="summary" class="summary"></div>
 <h2>Volunteers</h2><div class="table-wrap"><table><thead><tr><th>Name</th><th>Email address</th><th>Cell</th><th>Items and times</th></tr></thead><tbody id="volunteers"></tbody></table></div>
 <h2>Positions still needing to be filled</h2><div class="table-wrap"><table><thead><tr><th>Item</th><th>Time</th><th>Filled / Needed</th><th>Still needed</th><th>Open positions</th></tr></thead><tbody id="openings"></tbody></table></div>
