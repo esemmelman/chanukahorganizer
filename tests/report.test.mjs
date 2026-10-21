@@ -84,7 +84,7 @@ test('same name and email merge across phone differences without losing contacts
     { slot: 4, full_name: 'Someone Else', email: 'lee@example.com', phone: '555-987-6543' }
   ]);
   assert.equal(report.volunteers.length, 2);
-  assert.equal(report.volunteers[0].cell, '(555) 123-4567 / 555-987-6543');
+  assert.equal(report.volunteers[0].cell, '555-123-4567 / 555-987-6543');
   assert.deepEqual(report.volunteers[0].assignments.map(a => a.position), [1,2,3]);
   assert.equal(report.filled, 4);
 });

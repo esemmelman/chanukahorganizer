@@ -30,7 +30,7 @@ export function buildReport(rows) {
     const phone = row.phone.trim();
     const digits = phone.replace(/\D/g, '');
     const phoneKey = digits.length === 11 && digits.startsWith('1') ? digits.slice(1) : digits;
-    if (phone && !person.phones.has(phoneKey)) person.phones.set(phoneKey, phone);
+    if (phone && !person.phones.has(phoneKey)) person.phones.set(phoneKey, phoneKey.length === 10 ? phoneKey.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3') : phone);
     person.cell = [...person.phones.values()].join(' / ');
     person.assignments.push({ item: section[0], time: section[1], position: retired ? 8 : section[2].indexOf(row.slot) + 1, retired });
   }
