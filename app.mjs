@@ -1,4 +1,4 @@
-import { buildReport } from './report.mjs';
+import { buildReport, positionLabel } from './report.mjs';
 const URL = 'https://fgomaujsdblpzxhnnqrg.supabase.co';
 const KEY = 'sb_publishable_JOUqLZDnfGu_yCa6k6FVDQ_AYwpr72i';
 const login = document.querySelector('#login');
@@ -20,13 +20,13 @@ function render(rows) {
     const tr = volunteers.insertRow();
     cell(tr, person.name); cell(tr, person.email); cell(tr, person.cell);
     const ul = document.createElement('ul');
-    for (const assignment of person.assignments) { const li = document.createElement('li'); li.textContent = `${assignment.item} · ${assignment.time} · Position ${assignment.position}`; ul.append(li); }
+    for (const assignment of person.assignments) { const li = document.createElement('li'); li.textContent = `${assignment.item} · ${assignment.time} · ${assignment.retired ? 'Retired position 8' : positionLabel(assignment.item, assignment.position)}`; ul.append(li); }
     cell(tr, '').append(ul);
   }
   if (!data.volunteers.length) { const td = cell(volunteers.insertRow(), 'No volunteers have signed up yet.'); td.colSpan = 4; }
   for (const item of data.items) {
     const tr = openings.insertRow();
-    cell(tr, item.item); cell(tr, item.time); cell(tr, `${item.filled} / ${item.total}`); cell(tr, String(item.open.length)); cell(tr, item.open.length ? item.open.join(', ') : 'All filled');
+    cell(tr, item.item); cell(tr, item.time); cell(tr, `${item.filled} / ${item.total}`); cell(tr, String(item.open.length)); cell(tr, item.open.length ? item.open.map(position => positionLabel(item.item, position)).join(', ') : 'All filled');
     if (!item.open.length) tr.classList.add('filled');
   }
   document.querySelector('#summary').textContent = `${data.volunteers.length} volunteers · ${data.filled} of ${data.total} positions filled · ${data.total - data.filled} still needed`;
