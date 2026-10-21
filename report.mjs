@@ -24,12 +24,18 @@ export function buildReport(rows) {
     const retired = row.slot === 29 || row.slot === 37;
     const section = sections.find(([, , slots]) => slots.includes(row.slot)) || (retired ? ['Game Booths', row.slot === 29 ? sections[5][1] : sections[6][1], [row.slot]] : null);
     if (!section) throw new Error('Unknown signup position');
-    const key = JSON.stringify([row.full_name.trim(), row.email.trim().toLowerCase(), row.phone.replace(/\D/g, '')]);
-    if (!volunteers.has(key)) volunteers.set(key, { name: row.full_name, email: row.email, cell: row.phone, assignments: [] });
-    volunteers.get(key).assignments.push({ item: section[0], time: section[1], position: retired ? 8 : section[2].indexOf(row.slot) + 1, retired });
+    const key = JSON.stringify([row.full_name.trim().replace(/\s+/g, ' ').toLowerCase(), row.email.trim().toLowerCase()]);
+    if (!volunteers.has(key)) volunteers.set(key, { name: row.full_name.trim(), email: row.email.trim(), cell: '', phones: new Map(), assignments: [] });
+    const person = volunteers.get(key);
+    const phone = row.phone.trim();
+    const digits = phone.replace(/\D/g, '');
+    const phoneKey = digits.length === 11 && digits.startsWith('1') ? digits.slice(1) : digits;
+    if (phone && !person.phones.has(phoneKey)) person.phones.set(phoneKey, phone);
+    person.cell = [...person.phones.values()].join(' / ');
+    person.assignments.push({ item: section[0], time: section[1], position: retired ? 8 : section[2].indexOf(row.slot) + 1, retired });
   }
   return {
-    volunteers: [...volunteers.values()].sort((a, b) => a.name.localeCompare(b.name)),
+    volunteers: [...volunteers.values()].map(({ phones, ...person }) => person).sort((a, b) => a.name.localeCompare(b.name)),
     items: sections.map(([item, time, slots]) => ({ item, time, total: slots.length, filled: slots.filter(slot => occupied.has(slot)).length, open: slots.flatMap((slot, index) => occupied.has(slot) ? [] : [index + 1]) })),
     filled: occupied.size,
     total: sections.reduce((count, [, , slots]) => count + slots.length, 0)

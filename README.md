@@ -13,3 +13,5 @@ Contact data is fetched through `chanukah-organizer-report` in Supabase project 
 Deploy the function with JWT verification enabled using the included config. No schema changes are required. Tests: `node --test tests/*.test.mjs`.
 
 Game booths match the seven named choices in chanukahvolunteers for each shift. Morning tickets have two positions. Retired booth slot IDs 29 and 37 remain visible as retired assignments if returned, but do not count toward active capacity or openings. Existing slot IDs are preserved.
+
+Volunteer rows group by name and email, ignoring capitalization and extra name spacing. All assignments and distinct phone numbers are combined in that row.

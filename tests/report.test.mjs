@@ -74,3 +74,16 @@ test('named booths, added ticket position, and retired signups retain correct as
   assert.deepEqual(report.items[5].open.map(p => positionLabel('Game Booths', p)), boothNames.slice(1, 6));
   assert.deepEqual(report.items[9].open, [1]);
 });
+
+test('same name and email merge across phone differences without losing contacts or assignments', () => {
+  const report = buildReport([
+    { slot: 1, full_name: 'Lee Netzer', email: 'lee@example.com', phone: '(555) 123-4567' },
+    { slot: 2, full_name: ' lee  NETZER ', email: 'LEE@example.com ', phone: '+1 555-123-4567' },
+    { slot: 3, full_name: 'Lee Netzer', email: 'lee@example.com', phone: '555-987-6543' },
+    { slot: 4, full_name: 'Someone Else', email: 'lee@example.com', phone: '555-987-6543' }
+  ]);
+  assert.equal(report.volunteers.length, 2);
+  assert.equal(report.volunteers[0].cell, '(555) 123-4567 / 555-987-6543');
+  assert.deepEqual(report.volunteers[0].assignments.map(a => a.position), [1,2,3]);
+  assert.equal(report.filled, 4);
+});
