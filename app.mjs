@@ -92,17 +92,31 @@ document.querySelector('#by-time').addEventListener('click', () => {
     const pdf = new window.jspdf.jsPDF({ unit: 'pt', format: 'letter' });
     pdf.setFontSize(18);
     pdf.text('Chanukah volunteers by time', 36, 42);
-    pdf.setFontSize(9);
+    pdf.setFontSize(11);
     pdf.text(document.querySelector('#updated').textContent, 36, 60);
     pdf.autoTable({
       startY: 74,
       margin: { top: 36, right: 36, bottom: 36, left: 36 },
       head: [['Time', 'Activity', 'Name', 'Cell']],
-      body: timeRows.length ? timeRows.map(row => [row.time, row.activity, row.name, row.cell]) : [[{ content: 'No volunteers have signed up yet.', colSpan: 4 }]],
-      styles: { fontSize: 9, cellPadding: 6, overflow: 'linebreak' },
+      body: timeRows.length ? timeRows.map((row, index) => [
+        index === 0 || row.time !== timeRows[index - 1].time ? row.time : '',
+        row.activity, row.name, row.cell
+      ]) : [[{ content: 'No volunteers have signed up yet.', colSpan: 4 }]],
+      styles: { fontSize: 12, cellPadding: 7, overflow: 'linebreak' },
       headStyles: { fillColor: [82, 108, 70] },
       columnStyles: { 0: { cellWidth: 124 }, 1: { cellWidth: 156 }, 2: { cellWidth: 130 }, 3: { cellWidth: 130 } },
-      rowPageBreak: 'avoid'
+      rowPageBreak: 'avoid',
+      didParseCell: data => {
+        if (data.section === 'body' && timeRows.length) {
+          const index = data.row.index;
+          const startsGroup = index === 0 || timeRows[index].time !== timeRows[index - 1].time;
+          if (startsGroup) {
+            data.cell.styles.lineWidth = { top: 1, right: 0, bottom: 0, left: 0 };
+            data.cell.styles.lineColor = [82, 108, 70];
+          }
+          if (data.column.index === 0) data.cell.styles.fontStyle = 'bold';
+        }
+      }
     });
     pdf.save('chanukah-volunteers-by-time.pdf');
   } catch { status.textContent = 'Unable to create the PDF. Please reload and try again.'; }

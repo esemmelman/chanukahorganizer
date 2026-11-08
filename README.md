@@ -6,7 +6,7 @@ Enter the organizer passcode to view the report. The report groups each voluntee
 
 Serve this directory with a static web server or GitHub Pages. There are no frontend dependencies or build steps. The deployed Edge Function allows browser requests from https://esemmelman.github.io.
 
-The **By time** button downloads a PDF with Time, Activity, Name, and Cell columns, ordered by shift start time, activity, and volunteer name. Each assignment appears separately, including named game booths. PDF generation runs locally using vendored jsPDF 3.0.4 and jsPDF-AutoTable 5.0.2; contact data is not sent to a PDF service.
+The **By time** button downloads a PDF with Time, Activity, Name, and Cell columns in 12-point text, ordered by shift start time, activity, and volunteer name. Assignments are grouped by shift, with the time shown once in bold and a divider at the start of each group. Each assignment appears separately, including named game booths. PDF generation runs locally using vendored jsPDF 3.0.4 and jsPDF-AutoTable 5.0.2; contact data is not sent to a PDF service.
 
 ## Privacy and backend
 
