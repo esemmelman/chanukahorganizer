@@ -1,10 +1,31 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { buildReport, sections, boothNames, positionLabel } from '../report.mjs';
+import { buildReport, buildTimeRows, sections, boothNames, positionLabel } from '../report.mjs';
 import { handle } from '../supabase/functions/chanukah-organizer-report/index.ts';
 const env = key => ({ CHANUKAH_ORGANIZER_PASSCODE: 'test-passcode', SUPABASE_URL: 'https://database.example', SUPABASE_SERVICE_ROLE_KEY: 'secret' })[key];
 const request = passcode => new Request('https://example.com', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ passcode }) });
+
+test('time export sorts AM and PM shifts, activities, and names and keeps every assignment', () => {
+  const rows = buildTimeRows(buildReport([
+    { slot: 40, full_name: 'Zoe', email: 'z@example.com', phone: '5551234567' },
+    { slot: 30, full_name: 'Zoe', email: 'z@example.com', phone: '5551234567' },
+    { slot: 1, full_name: 'Zoe', email: 'z@example.com', phone: '5551234567' },
+    { slot: 11, full_name: 'Zoe', email: 'z@example.com', phone: '5551234567' },
+    { slot: 12, full_name: 'Amy', email: 'a@example.com', phone: '5559876543' },
+    { slot: 38, full_name: 'Amy', email: 'a@example.com', phone: '5559876543' }
+  ]).volunteers);
+  assert.deepEqual(rows.map(row => [row.time, row.activity, row.name]), [
+    ['8:00 AM - 10:00 AM', 'Set Up Game Booths', 'Zoe'],
+    ['11:00 AM - 12:15 PM', 'Food Service', 'Amy'],
+    ['11:00 AM - 12:15 PM', 'Food Service', 'Zoe'],
+    ['11:00 AM - 12:15 PM', 'Prize Table', 'Amy'],
+    ['12:15 PM - 1:30 PM', 'Game Booths - Football Toss', 'Zoe'],
+    ['1:30 PM - 2:30 PM', 'Break Down Booths', 'Zoe']
+  ]);
+  assert.equal(rows[0].cell, '555-123-4567');
+  assert.deepEqual(buildTimeRows([]), []);
+});
 test('report slot mappings match all current signup headings and local positions', { skip: !fs.existsSync('../chanukahvolunteers/index.html') }, () => {
   const html = fs.readFileSync('../chanukahvolunteers/index.html', 'utf8');
   const fields = [...html.matchAll(/<fieldset><legend>(.*?)<\/legend>([\s\S]*?)<\/fieldset>/g)];

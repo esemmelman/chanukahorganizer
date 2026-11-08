@@ -6,6 +6,8 @@ Enter the organizer passcode to view the report. The report groups each voluntee
 
 Serve this directory with a static web server or GitHub Pages. There are no frontend dependencies or build steps. The deployed Edge Function allows browser requests from https://esemmelman.github.io.
 
+The **By time** button downloads a PDF with Time, Activity, Name, and Cell columns, ordered by shift start time, activity, and volunteer name. Each assignment appears separately, including named game booths. PDF generation runs locally using vendored jsPDF 3.0.4 and jsPDF-AutoTable 5.0.2; contact data is not sent to a PDF service.
+
 ## Privacy and backend
 
 Contact data is fetched through `chanukah-organizer-report` in Supabase project `fgomaujsdblpzxhnnqrg`. The function checks the server-only `CHANUKAH_ORGANIZER_PASSCODE` secret before using its server-only service role to read contacts. Public signup table permissions stay unchanged. Contact data and credentials are never committed to GitHub. After validating the passcode, the server issues a signed session valid for 30 days. The browser stores only that session, never the passcode, and automatically restores access on return. Lock report clears the saved session on this browser. Expired sessions or a changed passcode require entering the passcode again.

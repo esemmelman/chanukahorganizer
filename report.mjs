@@ -16,6 +16,18 @@ export const boothNames = ['Football Toss', 'Bounce House', 'Bowling Pins', 'Bea
 export function positionLabel(item, position) {
   return item === 'Game Booths' ? boothNames[position - 1] : `Position ${position}`;
 }
+export function buildTimeRows(volunteers) {
+  const startMinutes = time => {
+    const [, hour, minute, period] = time.match(/^(\d+):(\d+) (AM|PM)/);
+    return (Number(hour) % 12 + (period === 'PM' ? 12 : 0)) * 60 + Number(minute);
+  };
+  return volunteers.flatMap(person => person.assignments.map(assignment => ({
+    time: assignment.time,
+    activity: assignment.item + (assignment.item === 'Game Booths' ? ` - ${assignment.retired ? 'Retired position 8' : positionLabel(assignment.item, assignment.position)}` : ''),
+    name: person.name,
+    cell: person.cell
+  }))).sort((a, b) => startMinutes(a.time) - startMinutes(b.time) || a.activity.localeCompare(b.activity) || a.name.localeCompare(b.name));
+}
 export function buildReport(rows) {
   const activeSlots = new Set(sections.flatMap(([, , slots]) => slots));
   const occupied = new Set(rows.filter(row => activeSlots.has(row.slot)).map(row => row.slot));
