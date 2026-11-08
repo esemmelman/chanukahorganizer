@@ -2,8 +2,8 @@ export const sections = [
   ['Set Up Game Booths', '8:00 AM - 10:00 AM', [1,2,3,4,5]],
   ['Food Prep', '9:00 AM - 11:00 AM', [6,7,8,9,10]],
   ['Food Service', '11:00 AM - 12:15 PM', [11,12,13,14,15]],
-  ['Food Service', '12:15 PM - 1:30 PM', [16,17,18]],
-  ['Food Clean Up', '1:30 PM - 2:30 PM', [19,20,21]],
+  ['Food Service', '12:15 PM - 1:30 PM', [16,17,18,47]],
+  ['Food Clean Up', '1:30 PM - 2:30 PM', [19,20,21,48]],
   ['Game Booths', '11:00 AM - 12:15 PM', [22,23,24,25,26,27,28]],
   ['Game Booths', '12:15 PM - 1:30 PM', [30,31,32,33,34,35,36]],
   ['Prize Table', '11:00 AM - 12:15 PM', [38]],
@@ -12,11 +12,11 @@ export const sections = [
   ['Tickets Table', '12:15 PM - 1:30 PM', [39]],
   ['Break Down Booths', '1:30 PM - 2:30 PM', [40,41,42,43]]
 ];
-export const boothNames = ['Football Toss', 'Bounce House', 'Bowling Pins', 'Bean Bag/Ring/Latke Toss', 'Dreidel Spin', 'Basketball Hoops', 'Other'];
+export const boothNames = ['Football Toss', 'Bounce House', 'Bowling Pins', 'Bean Bag/Ring/Latke Toss', 'Caring Community', 'Basketball Hoops', 'Other'];
 export function positionLabel(item, position) {
   return item === 'Game Booths' ? boothNames[position - 1] : `Position ${position}`;
 }
-export function buildTimeRows(volunteers) {
+export function buildTimeRows(volunteers, items = []) {
   const startMinutes = time => {
     const [, hour, minute, period] = time.match(/^(\d+):(\d+) (AM|PM)/);
     return (Number(hour) % 12 + (period === 'PM' ? 12 : 0)) * 60 + Number(minute);
@@ -26,7 +26,12 @@ export function buildTimeRows(volunteers) {
     activity: assignment.item + (assignment.item === 'Game Booths' ? ` - ${assignment.retired ? 'Retired position 8' : positionLabel(assignment.item, assignment.position)}` : ''),
     name: person.name,
     cell: person.cell
-  }))).sort((a, b) => startMinutes(a.time) - startMinutes(b.time) || a.activity.localeCompare(b.activity) || a.name.localeCompare(b.name));
+  }))).concat(items.flatMap(item => item.open.map(position => ({
+    time: item.time,
+    activity: `${item.item} - ${positionLabel(item.item, position)}`,
+    name: 'Unfilled',
+    cell: ''
+  })))).sort((a, b) => startMinutes(a.time) - startMinutes(b.time) || a.activity.localeCompare(b.activity) || a.name.localeCompare(b.name));
 }
 export function buildReport(rows) {
   const activeSlots = new Set(sections.flatMap(([, , slots]) => slots));

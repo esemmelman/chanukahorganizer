@@ -2,11 +2,11 @@
 
 Organizer report for the November 8th Chanukah Carnival. Reads the existing chanukahvolunteers signup data without changing signups.
 
-Enter the organizer passcode to view the report. The report groups each volunteer's name, email address, cell, and assignments with times and named game booths or local position numbers. All 12 item/shift combinations (44 active positions) show filled counts, remaining counts, and open booth names or position numbers. Refresh retrieves current signups; Print / Save PDF produces a printable report.
+Enter the organizer passcode to view the report. The report groups each volunteer's name, email address, cell, and assignments with times and named game booths or local position numbers. All 12 item/shift combinations (46 active positions) show filled counts, remaining counts, and open booth names or position numbers. Refresh retrieves current signups; Print / Save PDF produces a printable report.
 
 Serve this directory with a static web server or GitHub Pages. There are no frontend dependencies or build steps. The deployed Edge Function allows browser requests from https://esemmelman.github.io.
 
-The **By time** button downloads a PDF with Time, Activity, Name, and Cell columns in 12-point text, ordered by shift start time, activity, and volunteer name. Assignments are grouped by shift, with the time shown once in bold and a divider at the start of each group. Each assignment appears separately, including named game booths. PDF generation runs locally using vendored jsPDF 3.0.4 and jsPDF-AutoTable 5.0.2; contact data is not sent to a PDF service.
+The **By time** button downloads a PDF with Time, Activity, Name, and Cell columns in 12-point text, ordered by shift start time, activity, and volunteer name. Assignments are grouped by shift, with the time shown once in bold and a divider at the start of each group. Each assignment appears separately, including named game booths. Unfilled positions appear in their time group with the booth name or position number, Unfilled in the Name column, and a blank Cell. PDF generation runs locally using vendored jsPDF 3.0.4 and jsPDF-AutoTable 5.0.2; contact data is not sent to a PDF service.
 
 ## Privacy and backend
 
@@ -17,3 +17,4 @@ Deploy the function with JWT verification disabled using the included config; th
 Game booths match the seven named choices in chanukahvolunteers for each shift. Morning tickets have two positions. Retired booth slot IDs 29 and 37 remain visible as retired assignments if returned, but do not count toward active capacity or openings. Existing slot IDs are preserved.
 
 Volunteer rows group by name and email, ignoring capitalization and extra name spacing. All assignments and distinct phone numbers are combined in that row.
+

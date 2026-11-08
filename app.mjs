@@ -28,7 +28,7 @@ function clearReport() {
 function cell(row, value) { const td = row.insertCell(); td.textContent = value; return td; }
 function render(rows) {
   const data = buildReport(rows);
-  timeRows = buildTimeRows(data.volunteers);
+  timeRows = buildTimeRows(data.volunteers, data.items);
   const volunteers = document.querySelector('#volunteers');
   const openings = document.querySelector('#openings');
   volunteers.replaceChildren(); openings.replaceChildren();

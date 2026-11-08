@@ -38,13 +38,26 @@ test('report slot mappings match all current signup headings and local positions
     }
   });
 });
-test('empty and full reports account for every position', () => {
-  assert.deepEqual(sections.flatMap(([, , slots]) => slots).sort((a, b) => a - b), Array.from({ length: 46 }, (_, index) => index + 1).filter(slot => slot !== 29 && slot !== 37));
+test('time PDF includes each unfilled position alongside volunteers, including new food slots', () => {
+  const report = buildReport([22,47,48].map(slot => ({ slot, full_name: 'Amy', email: 'a@example.com', phone: '5551234567' })));
+  const rows = buildTimeRows(report.volunteers, report.items);
+  assert.equal(rows.length, 46);
+  assert.equal(rows.filter(row => row.name === 'Unfilled').length, 43);
+  assert.equal(rows.filter(row => row.name === 'Amy').length, 3);
+  assert.ok(rows.some(row => row.activity === 'Game Booths - Bounce House' && row.name === 'Unfilled' && row.cell === ''));
+  assert.ok(!rows.some(row => row.activity === 'Game Booths - Football Toss' && row.time === sections[5][1] && row.name === 'Unfilled'));
   const empty = buildReport([]);
-  assert.equal(empty.total, 44); assert.equal(empty.filled, 0); assert.equal(empty.items.length, 12);
+  assert.equal(buildTimeRows(empty.volunteers, empty.items).length, 46);
+  assert.equal(rows.filter(row => row.activity.includes('Retired')).length, 0);
+});
+
+test('empty and full reports account for every position', () => {
+  assert.deepEqual(sections.flatMap(([, , slots]) => slots).sort((a, b) => a - b), Array.from({ length: 48 }, (_, index) => index + 1).filter(slot => slot !== 29 && slot !== 37));
+  const empty = buildReport([]);
+  assert.equal(empty.total, 46); assert.equal(empty.filled, 0); assert.equal(empty.items.length, 12);
   const rows = sections.flatMap(([, , slots]) => slots.map(slot => ({ slot, full_name: 'A', email: 'a@example.com', phone: '5551234567' })));
   const full = buildReport(rows);
-  assert.equal(full.filled, 44); assert.equal(full.volunteers.length, 1);
+  assert.equal(full.filled, 46); assert.equal(full.volunteers.length, 1);
   assert.ok(full.items.every(item => item.open.length === 0));
 });
 test('multiple submissions group by contact identity and use local row numbers', () => {
@@ -88,7 +101,7 @@ test('backend failures return no data', async () => {
 
 test('named booths, added ticket position, and retired signups retain correct assignments', () => {
   const report = buildReport([22,28,30,36,46,29,37].map(slot => ({ slot, full_name: 'A', email: 'a@example.com', phone: '5551234567' })));
-  assert.equal(report.total, 44);
+  assert.equal(report.total, 46);
   assert.equal(report.filled, 5);
   const assignments = report.volunteers[0].assignments;
   assert.deepEqual(assignments.slice(0, 5).map(a => positionLabel(a.item, a.position)), ['Football Toss', 'Other', 'Football Toss', 'Other', 'Position 2']);
